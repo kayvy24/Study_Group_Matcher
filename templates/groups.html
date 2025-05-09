@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Study Groups</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #C41230;
+    }
+
+    .group {
+      background-color: #fff;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
+
+    .group h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      color: #000;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    ul li {
+      margin-bottom: 5px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>Study Groups</h1>
+
+  {% if groups %}
+    {% for group in groups %}
+      <div class="group">
+        <h2>Group {{ group.group_id }} — {{ group.course.title() }} ({{ group.availability }})</h2>
+        <strong>Members:</strong>
+        <ul>
+          {% for member in group.members %}
+            <li>{{ member }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No groups have been formed yet.</p>
+  {% endif %}
+</body>
+</html>

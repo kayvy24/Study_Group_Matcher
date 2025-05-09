@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SDSU Study Group Matcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: #f7f7f7;
+      color: #222;
+    }
+
+    header {
+      background: #C41230;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .nav-button {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    h2 {
+      text-align: center;
+      color: #C41230;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input, select {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    select[multiple] {
+      height: 200px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 14px;
+      font-size: 16px;
+      background: #000;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .group-list {
+      margin-top: 50px;
+    }
+
+    .group-card {
+      background: white;
+      border-left: 5px solid #C41230;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .group-card h3 {
+      margin-top: 0;
+    }
+
+    .group-card ul {
+      padding-left: 20px;
+    }
+
+    .group-card li {
+      margin-bottom: 5px;
+    }
+
+    .status-message {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SDSU Study Groups</h1>
+    <a href="/manage" class="nav-button">Manage Info</a>
+  </header>
+
+  <div class="container">
+    <h2>Find Your Study Team</h2>
+
+    <form method="POST">
+      <label for="name">Your Full Name:</label>
+      <input type="text" name="name" id="name" required>
+
+      <label for="email">Your SDSU Email:</label>
+      <input type="email" name="email" id="email" required>
+
+      <label for="course">Course Name (e.g., Math 151):</label>
+      <input type="text" name="course" id="course" required>
+
+      <label for="availability">Availability:</label>
+      <select name="availability" id="availability" multiple required>
+        {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+        <optgroup label="{{ day }}">
+          <option value="{{ day.lower() }} 8-9am">8:00–9:00 AM</option>
+          <option value="{{ day.lower() }} 9-10am">9:00–10:00 AM</option>
+          <option value="{{ day.lower() }} 10-11am">10:00–11:00 AM</option>
+          <option value="{{ day.lower() }} 11-12pm">11:00–12:00 PM</option>
+          <option value="{{ day.lower() }} 12-1pm">12:00–1:00 PM</option>
+          <option value="{{ day.lower() }} 1-2pm">1:00–2:00 PM</option>
+          <option value="{{ day.lower() }} 2-3pm">2:00–3:00 PM</option>
+          <option value="{{ day.lower() }} 3-4pm">3:00–4:00 PM</option>
+          <option value="{{ day.lower() }} 4-5pm">4:00–5:00 PM</option>
+          <option value="{{ day.lower() }} 5-6pm">5:00–6:00 PM</option>
+          <option value="{{ day.lower() }} 6-7pm">6:00–7:00 PM</option>
+          <option value="{{ day.lower() }} 7-8pm">7:00–8:00 PM</option>
+        </optgroup>
+        {% endfor %}
+      </select>
+
+      <label for="preferences">Study Style:</label>
+      <select name="preferences" id="preferences">
+        <option value="">-- Select --</option>
+        <option value="quiet group (no talking)">Quiet group (no talking)</option>
+        <option value="active discussion group">Active discussion group</option>
+        <option value="flashcard-based study">Flashcard-based study</option>
+        <option value="whiteboard collaboration">Whiteboard collaboration</option>
+        <option value="shared note-taking">Shared note-taking</option>
+        <option value="online-only (Zoom or Discord)">Online-only (Zoom/Discord)</option>
+      </select>
+
+      <label for="group_size">Preferred Group Size:</label>
+      <select name="group_size" id="group_size">
+        <option value="">-- No preference --</option>
+        <option value="2">2 people</option>
+        <option value="3">3 people</option>
+        <option value="4">4 people</option>
+        <option value="5">5+ people</option>
+      </select>
+
+      <button type="submit">Find My Group</button>
+    </form>
+
+    {% if submitted %}
+    <div class="status-message">
+      {% if just_grouped %}
+        <h3 style="color: green;">🎉 You’ve been placed in a study group!</h3>
+        <p>Check your inbox for meeting details.</p>
+      {% else %}
+        <h3 style="color: orange;">🕒 You're in line.</h3>
+        <p>We’ll match you once others join your course and time slot.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if groups %}
+    <div class="group-list">
+      <h2>Current Study Groups</h2>
+      {% for group in groups %}
+        <div class="group-card">
+          <h3>Group {{ group.group_id }} — {{ group.course.title() }}</h3>
+          <p><strong>Time:</strong> {{ group.availability }}</p>
+          <ul>
+            {% for member in group.members %}
+              <li>{{ member }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

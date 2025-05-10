@@ -151,16 +151,40 @@
       <input type="text" name="course" id="course" value="{{ user.course }}" required>
 
       <label>Availability (select all that apply):</label>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
-          {% for hour in ['8-9am','9-10am','10-11am','11-12pm','12-1pm','1-2pm','2-3pm','3-4pm','4-5pm','5-6pm','6-7pm','7-8pm'] %}
-            <label>
-              <input type="checkbox" name="availability" value="{{ day.lower() }} {{ hour }}">
-              {{ day }} {{ hour }}
-            </label>
+      <style>
+        .availability-grid {
+          display: grid;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 10px;
+          overflow-x: auto;
+          font-size: 13px;
+        }
+        .availability-grid div {
+          display: flex;
+          align-items: center;
+        }
+        .availability-header {
+          font-weight: bold;
+          text-align: center;
+        }
+      </style>
+
+      <div class="availability-grid">
+        <div class="availability-header"></div>
+        {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+          <div class="availability-header">{{ day[:3] }}</div>
+        {% endfor %}
+
+        {% for hour in ['8-9am','9-10am','10-11am','11-12pm','12-1pm','1-2pm','2-3pm','3-4pm','4-5pm','5-6pm','6-7pm','7-8pm'] %}
+          <div class="availability-header">{{ hour }}</div>
+          {% for day in ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] %}
+            <div>
+              <input type="checkbox" name="availability" value="{{ day }} {{ hour }}">
+            </div>
           {% endfor %}
         {% endfor %}
       </div>
+
 
       <label for="preferences">Study Style:</label>
       <select name="preferences" id="preferences">

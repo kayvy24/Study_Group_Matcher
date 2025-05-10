@@ -73,13 +73,13 @@ def index():
                                     availability = set(a.strip().lower() for a in srow[3].split(','))
                                     avail_lists.append(availability)
 
-                common_availability = ', '.join(sorted(set.intersection(*avail_lists))) if avail_lists else 'Unavailable'
+                    common_availability = ', '.join(sorted(set.intersection(*avail_lists))) if avail_lists else 'Unavailable'
 
-                group_list.append({
-                    'group_id': row['group_id'],
-                    'course': row['class'],
-                    'availability': common_availability
-                })
+                    group_list.append({
+                        'group_id': row['group_id'],
+                        'course': row['class'],
+                        'availability': common_availability
+                    })
 
     return render_template('index.html', submitted=submitted, just_grouped=just_grouped, user=user_added, groups=group_list)
 

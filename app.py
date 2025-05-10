@@ -160,7 +160,7 @@ def view_group(group_id):
                         if any(email in m.lower() for m in row['members'].split('|')):
                             session['authorized_group'] = group_id
                             session['authorized_email'] = email
-                            return redirect(url_for('group_details', group_id=group_id))
+                            return redirect(url_for('edit_group'))
         error = 'Invalid email or password.'
 
     return render_template('group_login.html', group_id=group_id, error=error)

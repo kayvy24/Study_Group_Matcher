@@ -72,9 +72,9 @@ def index():
                 if existing_name in grouped_names or existing_name == name:
                     continue
                 if existing_course == course:
-                    existing_times = [t.strip() for t in existing_availability.lower().split(',')]
-                    new_times = [t.strip() for t in availability.lower().split(',')]
-                    if any(time in existing_times for time in new_times):
+                    existing_times = set(t.strip() for t in existing_availability.lower().split(','))
+                    new_times = set(t.strip() for t in availability.lower().split(','))
+                    if existing_times & new_times:
                         potential_group.append({
                             'name': existing_name,
                             'email': existing_email,

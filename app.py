@@ -1,8 +1,3 @@
-# Merged app.py with full features + privacy
-# Includes: /manage, /update, /delete, /edit_group, /view_group, /group_details
-# Auto-generates group password and sends it via email
-# Protects group details behind login (email + password)
-
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mail import Mail, Message
 import csv, os, secrets
@@ -13,7 +8,6 @@ app.secret_key = 'sdsu-group-secret'
 SUBMISSIONS_FILE = 'submissions.csv'
 GROUPS_FILE = 'groups.csv'
 
-# Email config
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -55,7 +49,7 @@ def index():
             writer = csv.writer(file)
             writer.writerow([name, email, course, availability, preferences, group_size_str, 'yes'])
 
-        # Find previous submissions and try to form a group
+        # Matching logic
         potential_group = [user_added]
 
         with open(SUBMISSIONS_FILE, 'r') as file:
@@ -91,7 +85,6 @@ def index():
                 if str(len(potential_group)) in group_sizes:
                     break
 
-        # If a full group has been formed, save to groups.csv
         if str(len(potential_group)) in group_sizes:
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
             members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
@@ -144,104 +137,28 @@ Keep this email — you'll need the Group ID and Password to view or make change
             except Exception as e:
                 print("❌ Match email error:", str(e))
 
-grouped_names = set()
-        if os.path.exists(GROUPS_FILE):
-            with open(GROUPS_FILE, 'r') as gfile:
-                reader = csv.DictReader(gfile)
-                for row in reader:
-                    members = row['members'].split('|')
-                    grouped_names.update(m.strip().split(' (')[0].lower() for m in members)
-
-        potential_group = [user_added]
-        with open(SUBMISSIONS_FILE, 'r') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if len(row) < 7:
-                    continue
-                existing_name, existing_email, existing_course, existing_availability, existing_preferences, existing_group_size, _ = row
-                if existing_name.lower() in grouped_names or existing_name == name:
-                    continue
-                if existing_course == course:
-                    existing_times = set(t.strip() for t in existing_availability.lower().split(','))
-                    new_times = set(t.strip() for t in availability.lower().split(','))
-                    existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
-                    new_styles = set(s.strip() for s in preferences.lower().split(','))
-                    style_overlap = existing_styles & new_styles
-                    group_size_match = existing_group_size.strip() in group_sizes or not group_sizes
-
-                    if existing_times & new_times and style_overlap and group_size_match:
-                        potential_group.append({
-                            'name': existing_name,
-                            'email': existing_email,
-                            'course': existing_course,
-                            'availability': existing_availability,
-                            'preferences': existing_preferences,
-                            'group_size': existing_group_size
-                        })
-
-                    if str(len(potential_group)) in group_sizes:
-                        break
-                
-
-        if str(len(potential_group)) in group_sizes:
-            group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
-            members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
-            password = secrets.token_urlsafe(6)
-
-            with open(GROUPS_FILE, 'a', newline='') as gfile:
-                fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size', 'group_password']
-                writer = csv.DictWriter(gfile, fieldnames=fieldnames)
-                if gfile.tell() == 0:
-                    writer.writeheader()
-                writer.writerow({
-                    'group_id': group_id,
-                    'class': course,
-                    'availability': availability,
-                    'members': members_str,
-                    'group_size': group_size_str,
-                    'group_password': password
-                })
-
-            just_grouped = True
-            try:
-                emails = [p['email'] for p in potential_group]
-                names = [f"• {p['name']}" for p in potential_group]
-                location = "Love Library, 2nd Floor"
-                msg = Message(
-                    subject=f"🎓 You're Matched for {course.upper()}!",
-                    recipients=emails
-                )
-                msg.body = f"""Hi,
-
-You've been matched into a study group for {course.upper()} with:
-
-{chr(10).join(names)}
-
-📅 Time: {availability}
-📍 Suggested Location: {location}
-
-🔐 Group Password: {password}
-📌 Group ID: {group_id}
-
-👉 View your group: {url_for('view_group', group_id=group_id, _external=True)}
-👉 Edit your group: {url_for('view_group', group_id=group_id, _external=True)} (use same password)
-
-Keep this email — you'll need the Group ID and Password to view or make changes.
-
-— SDSU Study Group Matcher
-"""
-                mail.send(msg)
-            except Exception as e:
-                print("❌ Match email error:", str(e))
-
     if os.path.exists(GROUPS_FILE):
         with open(GROUPS_FILE, 'r') as gfile:
             reader = csv.DictReader(gfile)
             for row in reader:
+                members = row['members'].split('|')
+                member_emails = [m.split('(')[-1].replace(')', '').strip().lower() for m in members]
+                avail_lists = []
+
+                if os.path.exists(SUBMISSIONS_FILE):
+                    with open(SUBMISSIONS_FILE, 'r') as sfile:
+                        sreader = csv.reader(sfile)
+                        for srow in sreader:
+                            if len(srow) >= 4 and srow[1].strip().lower() in member_emails:
+                                availability_set = set(a.strip().lower() for a in srow[3].split(','))
+                                avail_lists.append(availability_set)
+
+                common_availability = ', '.join(sorted(set.intersection(*avail_lists))) if avail_lists else 'Unavailable'
+
                 group_list.append({
                     'group_id': row['group_id'],
                     'course': row['class'],
-                    'availability': row['availability']
+                    'availability': common_availability
                 })
 
     return render_template('index.html', submitted=submitted, just_grouped=just_grouped, user=user_added, groups=group_list)

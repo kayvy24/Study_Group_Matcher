@@ -1,59 +1,53 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Study Group Details</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f7f7f7;
-      margin: 0;
+      background-color: #f9f9f9;
       padding: 30px;
+      color: #222;
     }
-
     .container {
       max-width: 700px;
       margin: auto;
       background: white;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-
     h1 {
       color: #C41230;
       text-align: center;
     }
-
+    .info {
+      margin-top: 20px;
+    }
     ul {
       padding-left: 20px;
     }
-
     li {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
-
-    .info {
-      margin: 20px 0;
+    .section-title {
+      font-weight: 600;
+      margin-top: 20px;
     }
-
-    .edit-form {
-      margin-top: 30px;
+    .logout {
+      margin-top: 20px;
       text-align: center;
     }
-
-    .edit-form button {
-      background: #C41230;
+    .logout form button {
+      padding: 10px 20px;
+      background-color: #555;
       color: white;
-      padding: 12px 20px;
       border: none;
       border-radius: 8px;
-      font-size: 15px;
       cursor: pointer;
-    }
-
-    .edit-form button:hover {
-      background: #a00e25;
     }
   </style>
 </head>
@@ -62,17 +56,18 @@
     <h1>Group {{ group.group_id }} — {{ group.class.title() }}</h1>
 
     <div class="info">
-      <p><strong>Common Available Times:</strong></p>
+      <p class="section-title">Common Available Times:</p>
       <ul>
-        {% for time in group.common_availability %}
-          <li>{{ time }}</li>
+        {% if group.common_availability %}
+          {% for time in group.common_availability %}
+            <li>{{ time }}</li>
+          {% endfor %}
         {% else %}
           <li>No common times found.</li>
-        {% endfor %}
+        {% endif %}
       </ul>
 
-      <p><strong>Group Size:</strong> {{ group.group_size }}</p>
-      <p><strong>Members:</strong></p>
+      <p class="section-title">Members:</p>
       <ul>
         {% for member in group.members %}
           <li>{{ member }}</li>
@@ -81,20 +76,11 @@
     </div>
 
     {% if session['authorized_group'] == group.group_id %}
-      <div class="edit-form">
-        <form method="POST" action="/edit_group">
-          <input type="hidden" name="email" value="{{ session.get('authorized_email', '') }}">
-          <button type="submit">✏️ Edit This Group</button>
-        </form>
-      </div>
-    {% endif %}
-
-    {% if session['authorized_group'] == group.group_id %}
-      <div class="edit-form" style="margin-top: 10px;">
-        <form method="GET" action="/logout">
-          <button type="submit" style="background-color: #777;">🚪 Log Out</button>
-        </form>
-      </div>
+    <div class="logout">
+      <form method="GET" action="/logout">
+        <button type="submit">🚪 Log Out</button>
+      </form>
+    </div>
     {% endif %}
   </div>
 </body>

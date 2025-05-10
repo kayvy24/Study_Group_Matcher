@@ -23,7 +23,6 @@ app.config['MAIL_DEFAULT_SENDER'] = 'sdsustudygroupdemo@gmail.com'
 
 mail = Mail(app)
 
-# ---- Main group creation + matching route ----
 @app.route('/', methods=['GET', 'POST'])
 def index():
     submitted = False
@@ -38,7 +37,7 @@ def index():
         availability_list = request.form.getlist('availability')
         availability = ', '.join([a.lower().strip() for a in availability_list])
         preferences = ', '.join(request.form.getlist('preferences'))
-        group_sizes = request.form.getlist('group_size')
+        group_size = request.form.getlist('group_size')
 
         submitted = True
 
@@ -73,44 +72,26 @@ def index():
                 if existing_name.lower() in grouped_names or existing_name == name:
                     continue
                 if existing_course == course:
-            existing_times = set(t.strip() for t in existing_availability.lower().split(','))
-            new_times = set(t.strip() for t in availability.lower().split(','))
-            existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
-            new_styles = set(s.strip() for s in preferences.lower().split(','))
-            style_overlap = existing_styles & new_styles
-            group_size_match = existing_group_size.strip() in group_sizes or not group_sizes
-
-            if existing_times & new_times and style_overlap and group_size_match:
-                potential_group.append({
-                    'name': existing_name,
-                    'email': existing_email,
-                    'course': existing_course,
-                    'availability': existing_availability,
-                    'preferences': existing_preferences,
-                    'group_size': existing_group_size
-                })
-
-            if str(len(potential_group)) in group_sizes:
-                breakexisting_times = set(t.strip() for t in existing_availability.lower().split(','))
+                    existing_times = set(t.strip() for t in existing_availability.lower().split(','))
                     new_times = set(t.strip() for t in availability.lower().split(','))
                     existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
-    new_styles = set(s.strip() for s in preferences.lower().split(','))
-    style_overlap = existing_styles & new_styles
+                    new_styles = set(s.strip() for s in preferences.lower().split(','))
+                    style_overlap = existing_styles & new_styles
+                    group_size_match = existing_group_size.strip() in group_size or not group_size
 
-    group_size_match = existing_group_size.strip() in group_sizes or not group_sizes
+                    if existing_times & new_times and style_overlap and group_size_match:
+                        potential_group.append({
+                            'name': existing_name,
+                            'email': existing_email,
+                            'course': existing_course,
+                            'availability': existing_availability,
+                            'preferences': existing_preferences,
+                            'group_size': existing_group_size
+                        })
 
-    if existing_times & new_times and style_overlap and group_size_match:
-        potential_group.append({
-            'name': existing_name,
-            'email': existing_email,
-            'course': existing_course,
-            'availability': existing_availability,
-            'preferences': existing_preferences,
-            'group_size': existing_group_size
-        })
-
-    if str(len(potential_group)) in group_sizes:
-        break
+                    if str(len(potential_group)) in group_size:
+                        break
+                
 
         if len(potential_group) == int(group_size):
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)

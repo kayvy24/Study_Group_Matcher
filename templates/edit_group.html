@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit or Delete My Group</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      background: #f7f7f7;
+    }
+
+    h1 {
+      color: #C41230;
+      text-align: center;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+
+    form {
+      margin-top: 20px;
+    }
+
+    label, input, select, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    input, select {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .delete-btn {
+      background-color: #555;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .group-info {
+      margin-top: 20px;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    .message {
+      color: red;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Edit or Delete My Study Group</h1>
+
+  <div class="box">
+    <!-- Email Lookup Form -->
+    <form method="POST">
+      <label for="email">Enter your email to find your group:</label>
+      <input type="email" name="email" id="email" value="{{ email }}" required>
+      <button type="submit">Find My Group</button>
+    </form>
+
+    <!-- Group Details and Edit Form -->
+    {% if group %}
+    <div class="group-info">
+      <h3>Group {{ group.group_id }} — {{ group.course.title() }}</h3>
+      <p><strong>Members:</strong></p>
+      <ul>
+        {% for member in group.members %}
+          <li>{{ member }}</li>
+        {% endfor %}
+      </ul>
+
+      <form method="POST" action="/update_group">
+        <input type="hidden" name="group_id" value="{{ group.group_id }}">
+
+        <label for="availability">Availability:</label>
+        <input type="text" name="availability" value="{{ group.availability }}" required>
+
+        <label for="group_size">Group Size Limit:</label>
+        <select name="group_size" required>
+          <option value="2" {% if group.group_size == '2' %}selected{% endif %}>2</option>
+          <option value="3" {% if group.group_size == '3' %}selected{% endif %}>3</option>
+          <option value="4" {% if group.group_size == '4' %}selected{% endif %}>4</option>
+          <option value="5" {% if group.group_size == '5' %}selected{% endif %}>5+</option>
+        </select>
+
+        <button type="submit" class="save-btn">💾 Save Changes</button>
+      </form>
+
+      <form method="POST" action="/delete_group">
+        <input type="hidden" name="group_id" value="{{ group.group_id }}">
+        <button type="submit" class="delete-btn">❌ Delete This Group</button>
+      </form>
+    </div>
+    {% elif message %}
+      <div class="message">{{ message }}</div>
+    {% endif %}
+  </div>
+</body>
+</html>

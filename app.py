@@ -80,7 +80,6 @@ def index():
                 if len(potential_group) == int(group_size):
                     break
 
-        # ✅ Try to join existing group
         existing_group_joined = False
         updated_groups = []
 
@@ -196,124 +195,77 @@ Good luck and happy studying!
         groups=group_list
     )
 
-@app.route('/manage', methods=['GET', 'POST'])
-def manage():
-    user_data = None
-    message = ''
-    status = request.args.get('status', '')
+@app.route('/edit_group', methods=['GET', 'POST'])
+def edit_group():
+    group_info = None
+    email = ""
+    message = ""
 
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
 
-        if os.path.exists(SUBMISSIONS_FILE):
-            with open(SUBMISSIONS_FILE, 'r') as file:
-                reader = csv.reader(file)
+        if os.path.exists(GROUPS_FILE):
+            with open(GROUPS_FILE, 'r') as gfile:
+                reader = csv.DictReader(gfile)
                 for row in reader:
-                    if len(row) >= 7 and row[1].strip().lower() == email:
-                        user_data = {
-                            'name': row[0],
-                            'email': row[1],
-                            'course': row[2],
-                            'availability': row[3],
-                            'preferences': row[4],
-                            'group_size': row[5]
+                    members = [m.strip().lower() for m in row['members'].split('|')]
+                    if email in members:
+                        group_info = {
+                            'group_id': row['group_id'],
+                            'course': row['class'],
+                            'availability': row['availability'],
+                            'members': members,
+                            'group_size': row.get('group_size', 'N/A')
                         }
+                        break
+                if not group_info:
+                    message = "No group found for that email."
 
-        if not user_data:
-            message = "No submission found for that email."
+    return render_template('edit_group.html', group=group_info, email=email, message=message)
 
-    return render_template('manage.html', user=user_data, message=message, status=status)
+@app.route('/update_group', methods=['POST'])
+def update_group():
+    group_id = request.form['group_id']
+    new_availability = request.form['availability'].strip().lower()
+    new_group_size = request.form['group_size'].strip()
+    updated_rows = []
 
-@app.route('/update', methods=['POST'])
-def update():
-    email = request.form['email'].strip().lower()
-    new_rows = []
-    updated_row = None
-
-    if os.path.exists(SUBMISSIONS_FILE):
-        with open(SUBMISSIONS_FILE, 'r') as file:
-            reader = csv.reader(file)
+    if os.path.exists(GROUPS_FILE):
+        with open(GROUPS_FILE, 'r') as file:
+            reader = csv.DictReader(file)
             for row in reader:
-                if len(row) >= 7 and row[1].strip().lower() == email:
-                    updated_row = [
-                        request.form['name'],
-                        email,
-                        request.form['course'],
-                        request.form['availability'],
-                        request.form['preferences'],
-                        request.form['group_size'],
-                        'yes'
-                    ]
-                    row = updated_row
-                new_rows.append(row)
+                if row['group_id'] == group_id:
+                    row['availability'] = new_availability
+                    row['group_size'] = new_group_size
+                updated_rows.append(row)
 
-        with open(SUBMISSIONS_FILE, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(new_rows)
+        with open(GROUPS_FILE, 'w', newline='') as file:
+            fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(updated_rows)
 
-        try:
-            if updated_row:
-                msg = Message(
-                    subject="✏️ Your SDSU Study Group Info Was Updated",
-                    recipients=[email]
-                )
-                msg.body = f"""Hi,
+    return redirect(url_for('edit_group'))
 
-Your submission has been updated:
+@app.route('/delete_group', methods=['POST'])
+def delete_group():
+    group_id = request.form['group_id']
+    updated_rows = []
 
-• Course: {updated_row[2].upper()}
-• Availability: {updated_row[3]}
-• Study Style: {updated_row[4]}
-• Group Size: {updated_row[5]}
-
-You can return to update or delete at any time.
-
-— SDSU Study Group Matcher
-"""
-                mail.send(msg)
-        except Exception as e:
-            print("❌ Update email error:", str(e))
-
-    return redirect(url_for('manage', status='updated'))
-
-@app.route('/delete', methods=['POST'])
-def delete():
-    email = request.form['email'].strip().lower()
-    new_rows = []
-    deleted_name = None
-
-    if os.path.exists(SUBMISSIONS_FILE):
-        with open(SUBMISSIONS_FILE, 'r') as file:
-            reader = csv.reader(file)
+    if os.path.exists(GROUPS_FILE):
+        with open(GROUPS_FILE, 'r') as file:
+            reader = csv.DictReader(file)
             for row in reader:
-                if len(row) >= 2 and row[1].strip().lower() != email:
-                    new_rows.append(row)
-                elif row[1].strip().lower() == email:
-                    deleted_name = row[0]
+                if row['group_id'] != group_id:
+                    updated_rows.append(row)
 
-        with open(SUBMISSIONS_FILE, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(new_rows)
+        with open(GROUPS_FILE, 'w', newline='') as file:
+            fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(updated_rows)
 
-        try:
-            if deleted_name:
-                msg = Message(
-                    subject="❌ Your Study Group Submission Was Removed",
-                    recipients=[email]
-                )
-                msg.body = f"""Hi {deleted_name},
-
-Your SDSU Study Group submission has been successfully removed.
-
-You're always welcome to re-submit if you're still looking for a group.
-
-— SDSU Study Group Matcher
-"""
-                mail.send(msg)
-        except Exception as e:
-            print("❌ Delete email error:", str(e))
-
-    return redirect(url_for('manage', status='deleted'))
+    return redirect(url_for('edit_group'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

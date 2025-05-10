@@ -7,9 +7,9 @@ app.secret_key = 'sdsu-group-secret'
 
 SUBMISSIONS_FILE = 'submissions.csv'
 GROUPS_FILE = 'groups.csv'
-GROUP_SIZE = 3
+GROUP_SIZE = 2  # ⬅️ lowered for testing
 
-# ✅ Gmail App Config (use your app password)
+# ✅ Gmail App Config
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -75,6 +75,7 @@ def index():
                     existing_times = set(t.strip() for t in existing_availability.lower().split(','))
                     new_times = set(t.strip() for t in availability.lower().split(','))
                     if existing_times & new_times:
+                        print(f"✅ MATCH FOUND: {existing_name} overlaps with {name} in {existing_times & new_times}")
                         potential_group.append({
                             'name': existing_name,
                             'email': existing_email,
@@ -257,25 +258,5 @@ You're always welcome to re-submit if you're still looking for a group.
 
     return redirect(url_for('manage', status='deleted'))
 
-# ✅ Replit-Compatible Entry Point
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

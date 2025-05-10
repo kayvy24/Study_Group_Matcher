@@ -57,13 +57,13 @@ def index():
 
         grouped_names = set()
         if os.path.exists(GROUPS_FILE):
-        with open(GROUPS_FILE, 'r') as gfile:
-            reader = csv.DictReader(gfile)
-            for row in reader:
+            with open(GROUPS_FILE, 'r') as gfile:
+                reader = csv.DictReader(gfile)
+                for row in reader:
                 # Compute shared availability from group members
-                members = row['members'].split('|')
-                member_emails = [m.split('(')[-1].replace(')', '').strip().lower() for m in members]
-                avail_lists = []
+                    members = row['members'].split('|')
+                    member_emails = [m.split('(')[-1].replace(')', '').strip().lower() for m in members]
+                    avail_lists = []
 
                 with open(SUBMISSIONS_FILE, 'r') as sfile:
                     sreader = csv.reader(sfile)
@@ -105,7 +105,8 @@ def view_group(group_id):
 def group_details(group_id):
     if session.get('authorized_group') != group_id:
         return redirect(url_for('view_group', group_id=group_id))
-group_info = None
+
+    group_info = None
     if os.path.exists(GROUPS_FILE):
         with open(GROUPS_FILE, 'r') as file:
             reader = csv.DictReader(file)

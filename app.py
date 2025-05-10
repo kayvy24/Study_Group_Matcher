@@ -1,6 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+# Merged app.py with full features + privacy
+# Includes: /manage, /update, /delete, /edit_group, /view_group, /group_details
+# Auto-generates group password and sends it via email
+# Protects group details behind login (email + password)
+
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mail import Mail, Message
-import csv, os
+import csv, os, secrets
 
 app = Flask(__name__)
 app.secret_key = 'sdsu-group-secret'
@@ -8,6 +13,7 @@ app.secret_key = 'sdsu-group-secret'
 SUBMISSIONS_FILE = 'submissions.csv'
 GROUPS_FILE = 'groups.csv'
 
+# Email config
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -17,6 +23,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'sdsustudygroupdemo@gmail.com'
 
 mail = Mail(app)
 
+# ---- Main group creation + matching route ----
 @app.route('/', methods=['GET', 'POST'])
 def index():
     submitted = False
@@ -54,7 +61,7 @@ def index():
                 reader = csv.DictReader(gfile)
                 for row in reader:
                     members = row['members'].split('|')
-                    grouped_names.update(members)
+                    grouped_names.update(m.strip().split(' (')[0].lower() for m in members)
 
         potential_group = [user_added]
         with open(SUBMISSIONS_FILE, 'r') as file:
@@ -63,7 +70,7 @@ def index():
                 if len(row) < 7:
                     continue
                 existing_name, existing_email, existing_course, existing_availability, existing_preferences, existing_group_size, _ = row
-                if existing_name in grouped_names or existing_name == name:
+                if existing_name.lower() in grouped_names or existing_name == name:
                     continue
                 if existing_course == course:
                     existing_times = set(t.strip() for t in existing_availability.lower().split(','))
@@ -80,66 +87,13 @@ def index():
                 if len(potential_group) == int(group_size):
                     break
 
-        existing_group_joined = False
-        updated_groups = []
-
-        if os.path.exists(GROUPS_FILE):
-            with open(GROUPS_FILE, 'r') as gfile:
-                reader = csv.DictReader(gfile)
-                for row in reader:
-                    if row['class'] == course:
-                        group_times = set(t.strip() for t in row['availability'].lower().split(','))
-                        new_times = set(t.strip() for t in availability.lower().split(','))
-                        if group_times & new_times:
-                            members = row['members'].split('|')
-                            if len(members) < int(row['group_size']):
-                                members.append(f"{name} ({email})")
-                                updated_groups.append({
-                                    'group_id': row['group_id'],
-                                    'class': course,
-                                    'availability': row['availability'],
-                                    'members': '|'.join(members),
-                                    'group_size': row['group_size']
-                                })
-                                existing_group_joined = True
-                                just_grouped = True
-
-                                try:
-                                    msg = Message(
-                                        subject=f"🎓 You've Joined a {course.upper()} Study Group!",
-                                        recipients=[email]
-                                    )
-                                    msg.body = f"""Hi {name},
-
-You've been added to an existing study group for {course.upper()}.
-
-📅 Time: {row['availability']}
-📍 Location: Love Library, 2nd Floor
-
-Group members:
-{chr(10).join('• ' + m for m in members)}
-
-— SDSU Study Group Matcher
-"""
-                                    mail.send(msg)
-                                except Exception as e:
-                                    print("❌ Email error on join:", str(e))
-                                continue
-                    updated_groups.append(row)
-
-            if existing_group_joined:
-                with open(GROUPS_FILE, 'w', newline='') as gfile:
-                    fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
-                    writer = csv.DictWriter(gfile, fieldnames=fieldnames)
-                    writer.writeheader()
-                    writer.writerows(updated_groups)
-
-        if not existing_group_joined and len(potential_group) == int(group_size):
+        if len(potential_group) == int(group_size):
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
-            # ✅ When creating a new group
             members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
+            password = secrets.token_urlsafe(6)
+
             with open(GROUPS_FILE, 'a', newline='') as gfile:
-                fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
+                fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size', 'group_password']
                 writer = csv.DictWriter(gfile, fieldnames=fieldnames)
                 if gfile.tell() == 0:
                     writer.writeheader()
@@ -148,15 +102,15 @@ Group members:
                     'class': course,
                     'availability': availability,
                     'members': members_str,
-                    'group_size': group_size
+                    'group_size': group_size,
+                    'group_password': password
                 })
-            just_grouped = True
 
+            just_grouped = True
             try:
                 emails = [p['email'] for p in potential_group]
                 names = [f"• {p['name']}" for p in potential_group]
                 location = "Love Library, 2nd Floor"
-
                 msg = Message(
                     subject=f"🎓 You're Matched for {course.upper()}!",
                     recipients=emails
@@ -170,7 +124,8 @@ You've been matched into a study group for {course.upper()} with:
 📅 Time: {availability}
 📍 Suggested Location: {location}
 
-Good luck and happy studying!
+🔐 Group Password: {password}
+Use it to view your group at: {url_for('view_group', group_id=group_id, _external=True)}
 
 — SDSU Study Group Matcher
 """
@@ -185,16 +140,50 @@ Good luck and happy studying!
                 group_list.append({
                     'group_id': row['group_id'],
                     'course': row['class'],
-                    'availability': row['availability'],
-                    'members': row['members'].split('|')
+                    'availability': row['availability']
                 })
 
-    return render_template('index.html',
-        submitted=submitted,
-        just_grouped=just_grouped,
-        user=user_added,
-        groups=group_list
-    )
+    return render_template('index.html', submitted=submitted, just_grouped=just_grouped, user=user_added, groups=group_list)
+
+@app.route('/view_group/<group_id>', methods=['GET', 'POST'])
+def view_group(group_id):
+    error = ''
+    if request.method == 'POST':
+        email = request.form['email'].strip().lower()
+        password = request.form['password'].strip()
+
+        if os.path.exists(GROUPS_FILE):
+            with open(GROUPS_FILE, 'r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    if row['group_id'] == group_id and row['group_password'] == password:
+                        if any(email in m.lower() for m in row['members'].split('|')):
+                            session['authorized_group'] = group_id
+                            return redirect(url_for('group_details', group_id=group_id))
+        error = 'Invalid email or password.'
+
+    return render_template('group_login.html', group_id=group_id, error=error)
+
+@app.route('/group_details/<group_id>')
+def group_details(group_id):
+    if session.get('authorized_group') != group_id:
+        return redirect(url_for('view_group', group_id=group_id))
+
+    group_info = None
+    if os.path.exists(GROUPS_FILE):
+        with open(GROUPS_FILE, 'r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if row['group_id'] == group_id:
+                    group_info = row
+                    group_info['members'] = row['members'].split('|')
+                    break
+
+    return render_template('group_details.html', group=group_info)
+
+# /manage, /update, /delete, /edit_group, /update_group, /delete_group routes now merged in below
+
+# (Those routes would follow here, after the password features.)
 
 @app.route('/manage', methods=['GET', 'POST'])
 def manage():
@@ -320,6 +309,7 @@ def edit_group():
     group_info = None
     email = ""
     message = ""
+    status = request.args.get('status', '')
 
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
@@ -341,7 +331,7 @@ def edit_group():
                 if not group_info:
                     message = "No group found for that email."
 
-    return render_template('edit_group.html', group=group_info, email=email, message=message)
+    return render_template('edit_group.html', group=group_info, email=email, message=message, status=status)
 
 @app.route('/update_group', methods=['POST'])
 def update_group():
@@ -360,7 +350,7 @@ def update_group():
                 updated_rows.append(row)
 
         with open(GROUPS_FILE, 'w', newline='') as file:
-            fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
+            fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size', 'group_password']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(updated_rows)
@@ -380,7 +370,7 @@ def delete_group():
                     updated_rows.append(row)
 
         with open(GROUPS_FILE, 'w', newline='') as file:
-            fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
+            fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size', 'group_password']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(updated_rows)
@@ -388,4 +378,4 @@ def delete_group():
     return redirect(url_for('edit_group', status='deleted'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000)
+    app.run(debug=True)

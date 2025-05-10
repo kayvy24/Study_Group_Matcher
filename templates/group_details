@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Group {{ group.group_id }} Details</title>
+</head>
+<body>
+  <h1>Group {{ group.group_id }} — {{ group.class.title() }}</h1>
+  <p><strong>Time:</strong> {{ group.availability }}</p>
+  <p><strong>Group Size Limit:</strong> {{ group.group_size }}</p>
+  <h3>Members:</h3>
+  <ul>
+    {% for member in group.members %}
+      <li>{{ member }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

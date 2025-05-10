@@ -49,6 +49,25 @@
       cursor: pointer;
     }
 
+    .nav-button {
+      background: rgba(255, 255, 255, 0.15);
+      color: #C41230;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid #C41230;
+      display: inline-block;
+      transition: background 0.2s;
+    }
+
+.nav-button:hover {
+  background: #C41230;
+  color: white;
+}
+
+
     .save-btn {
       background-color: #007bff;
       color: white;
@@ -85,7 +104,14 @@
   </style>
 </head>
 <body>
+  <header style="text-align: right; margin-bottom: 20px;">
+    <a href="/" class="nav-button">← Back to Home</a>
+  </header>
   <h1>Edit or Delete My Study Group</h1>
+
+  <div style="text-align: center; margin-top: 10px;">
+    <a href="/" class="nav-button">← Back to Home</a>
+  </div>
 
   <div class="box">
     <!-- Email Lookup Form -->

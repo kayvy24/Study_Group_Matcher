@@ -38,7 +38,7 @@ def index():
         availability_list = request.form.getlist('availability')
         availability = ', '.join([a.lower().strip() for a in availability_list])
         preferences = request.form['preferences']
-        group_size = request.form.get('group_size', '').strip()
+        group_size = request.form.getlist('group_size')
 
         submitted = True
 
@@ -82,6 +82,8 @@ def index():
                         new_styles = set(s.strip() for s in preferences.lower().split(','))
                         style_overlap = existing_styles & new_styles
 
+                        group_size_match = existing_group_size.strip() in group_size or not group_size
+
                         if time_overlap and style_overlap:
                             potential_group.append({
                                 'name': existing_name,
@@ -92,7 +94,7 @@ def index():
                                 'group_size': existing_group_size
                             })
 
-                if len(potential_group) == int(group_size):
+                if str(len(potential_group)) in group_size:
                     break
 
         if len(potential_group) == int(group_size):

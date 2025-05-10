@@ -62,7 +62,15 @@
     <h1>Group {{ group.group_id }} — {{ group.class.title() }}</h1>
 
     <div class="info">
-      <p><strong>Meeting Time:</strong> {{ group.availability }}</p>
+      <p><strong>Common Available Times:</strong></p>
+      <ul>
+        {% for time in group.common_availability %}
+          <li>{{ time }}</li>
+        {% else %}
+          <li>No common times found.</li>
+        {% endfor %}
+      </ul>
+
       <p><strong>Group Size:</strong> {{ group.group_size }}</p>
       <p><strong>Members:</strong></p>
       <ul>

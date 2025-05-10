@@ -189,16 +189,22 @@
       </div>
 
 
-      <label for="preferences">Study Style:</label>
-      <select name="preferences" id="preferences">
-        <option value="">-- Select --</option>
-        <option value="quiet group (no talking)">Quiet group (no talking)</option>
-        <option value="active discussion group">Active discussion group</option>
-        <option value="flashcard-based study">Flashcard-based study</option>
-        <option value="whiteboard collaboration">Whiteboard collaboration</option>
-        <option value="shared note-taking">Shared note-taking</option>
-        <option value="online-only (Zoom or Discord)">Online-only (Zoom/Discord)</option>
-      </select>
+      <label>Study Style(s):</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        {% for style in [
+          'quiet group (no talking)',
+          'active discussion group',
+          'flashcard-based study',
+          'whiteboard collaboration',
+          'shared note-taking',
+          'online-only (Zoom or Discord)'
+        ] %}
+          <label>
+            <input type="checkbox" name="preferences" value="{{ style }}">
+            {{ style }}
+          </label>
+        {% endfor %}
+      </div>
 
       <label for="group_size">Preferred Group Size:</label>
       <select name="group_size" id="group_size">

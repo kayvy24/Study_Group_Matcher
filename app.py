@@ -73,17 +73,25 @@ def index():
                 if existing_name.lower() in grouped_names or existing_name == name:
                     continue
                 if existing_course == course:
-                    existing_times = set(t.strip() for t in existing_availability.lower().split(','))
-                    new_times = set(t.strip() for t in availability.lower().split(','))
-                    if existing_times & new_times:
-                        potential_group.append({
-                            'name': existing_name,
-                            'email': existing_email,
-                            'course': existing_course,
-                            'availability': existing_availability,
-                            'preferences': existing_preferences,
-                            'group_size': existing_group_size
-                        })
+                    if existing_course == course:
+                        existing_times = set(t.strip() for t in existing_availability.lower().split(','))
+                        new_times = set(t.strip() for t in availability.lower().split(','))
+                        time_overlap = existing_times & new_times
+
+                        existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
+                        new_styles = set(s.strip() for s in preferences.lower().split(','))
+                        style_overlap = existing_styles & new_styles
+
+                        if time_overlap and style_overlap:
+                            potential_group.append({
+                                'name': existing_name,
+                                'email': existing_email,
+                                'course': existing_course,
+                                'availability': existing_availability,
+                                'preferences': existing_preferences,
+                                'group_size': existing_group_size
+                            })
+
                 if len(potential_group) == int(group_size):
                     break
 
@@ -178,6 +186,19 @@ def group_details(group_id):
                 if row['group_id'] == group_id:
                     group_info = row
                     group_info['members'] = row['members'].split('|')
+
+                    member_emails = [m.split('(')[-1].replace(')', '').strip().lower() for m in group_info['members']]
+                    avail_lists = []
+
+                    with open(SUBMISSIONS_FILE, 'r') as sfile:
+                        sreader = csv.reader(sfile)
+                        for srow in sreader:
+                            if len(srow) >= 7 and srow[1].strip().lower() in member_emails:
+                                availability = set(a.strip().lower() for a in srow[3].split(','))
+                                avail_lists.append(availability)
+
+                    common_availability = sorted(set.intersection(*avail_lists)) if avail_lists else []
+                    group_info['common_availability'] = common_availability
                     break
 
     return render_template('group_details.html', group=group_info)

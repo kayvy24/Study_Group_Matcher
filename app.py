@@ -78,8 +78,9 @@ def index():
                     existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
                     new_styles = set(s.strip() for s in preferences.lower().split(','))
                     style_overlap = existing_styles & new_styles
-                    group_size_match = existing_group_size.strip() in group_sizes or not group_sizes
-
+                    existing_group_size_list = [s.strip() for s in existing_group_size.split(',')]
+                    group_size_match = any(size in group_sizes for size in existing_group_size_list)
+                    
                     if existing_times & new_times and style_overlap and group_size_match:
                         potential_group.append({
                             'name': existing_name,

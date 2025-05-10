@@ -37,7 +37,8 @@ def index():
         availability_list = request.form.getlist('availability')
         availability = ', '.join([a.lower().strip() for a in availability_list])
         preferences = ', '.join(request.form.getlist('preferences'))
-        group_size = request.form.getlist('group_size')
+        group_sizes = request.form.getlist('group_size')
+        group_size_str = ', '.join(group_sizes)
 
         submitted = True
 
@@ -47,12 +48,12 @@ def index():
             'course': course,
             'availability': availability,
             'preferences': preferences,
-            'group_size': group_size
+            'group_size': group_size_str
         }
 
         with open(SUBMISSIONS_FILE, mode='a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow([name, email, course, availability, preferences, group_size, 'yes'])
+            writer.writerow([name, email, course, availability, preferences, group_size_str, 'yes'])
 
         grouped_names = set()
         if os.path.exists(GROUPS_FILE):
@@ -77,7 +78,7 @@ def index():
                     existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
                     new_styles = set(s.strip() for s in preferences.lower().split(','))
                     style_overlap = existing_styles & new_styles
-                    group_size_match = existing_group_size.strip() in group_size or not group_size
+                    group_size_match = existing_group_size.strip() in group_size_str or not group_size_str
 
                     if existing_times & new_times and style_overlap and group_size_match:
                         potential_group.append({
@@ -89,11 +90,11 @@ def index():
                             'group_size': existing_group_size
                         })
 
-                    if str(len(potential_group)) in group_size:
+                    if str(len(potential_group)) in group_size_str:
                         break
                 
 
-        if len(potential_group) == int(group_size):
+        if str(len(potential_group)) in group_sizes:
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
             members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
             password = secrets.token_urlsafe(6)
@@ -108,7 +109,7 @@ def index():
                     'class': course,
                     'availability': availability,
                     'members': members_str,
-                    'group_size': group_size,
+                    'group_size': group_size_str,
                     'group_password': password
                 })
 

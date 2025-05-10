@@ -190,21 +190,25 @@
 
 
       <label>Study Style(s):</label>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        {% for style in [
-          'quiet group (no talking)',
-          'active discussion group',
-          'flashcard-based study',
-          'whiteboard collaboration',
-          'shared note-taking',
-          'online-only (Zoom or Discord)'
-        ] %}
-          <label>
-            <input type="checkbox" name="preferences" value="{{ style }}">
-            {{ style }}
-          </label>
-        {% endfor %}
+      <div class="dropdown-container">
+        <div class="dropdown-label" onclick="toggleDropdown()">Select Study Styles ⬇</div>
+        <div class="dropdown-menu" id="styleDropdown">
+          {% for style in [
+            'quiet group (no talking)',
+            'active discussion group',
+            'flashcard-based study',
+            'whiteboard collaboration',
+            'shared note-taking',
+            'online-only (Zoom or Discord)'
+          ] %}
+            <label>
+              <input type="checkbox" name="preferences" value="{{ style }}">
+              {{ style }}
+            </label><br>
+          {% endfor %}
+        </div>
       </div>
+
 
       <label for="group_size">Preferred Group Size:</label>
       <select name="group_size" id="group_size">

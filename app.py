@@ -38,7 +38,7 @@ def index():
         availability_list = request.form.getlist('availability')
         availability = ', '.join([a.lower().strip() for a in availability_list])
         preferences = request.form['preferences']
-        group_size = request.form.getlist('group_size')
+        group_size = request.form.get('group_size', '').strip()
 
         submitted = True
 
@@ -73,28 +73,18 @@ def index():
                 if existing_name.lower() in grouped_names or existing_name == name:
                     continue
                 if existing_course == course:
-                    if existing_course == course:
-                        existing_times = set(t.strip() for t in existing_availability.lower().split(','))
-                        new_times = set(t.strip() for t in availability.lower().split(','))
-                        time_overlap = existing_times & new_times
-
-                        existing_styles = set(s.strip() for s in existing_preferences.lower().split(','))
-                        new_styles = set(s.strip() for s in preferences.lower().split(','))
-                        style_overlap = existing_styles & new_styles
-
-                        group_size_match = existing_group_size.strip() in group_size or not group_size
-
-                        if time_overlap and style_overlap:
-                            potential_group.append({
-                                'name': existing_name,
-                                'email': existing_email,
-                                'course': existing_course,
-                                'availability': existing_availability,
-                                'preferences': existing_preferences,
-                                'group_size': existing_group_size
-                            })
-
-                if str(len(potential_group)) in group_size:
+                    existing_times = set(t.strip() for t in existing_availability.lower().split(','))
+                    new_times = set(t.strip() for t in availability.lower().split(','))
+                    if existing_times & new_times:
+                        potential_group.append({
+                            'name': existing_name,
+                            'email': existing_email,
+                            'course': existing_course,
+                            'availability': existing_availability,
+                            'preferences': existing_preferences,
+                            'group_size': existing_group_size
+                        })
+                if len(potential_group) == int(group_size):
                     break
 
         if len(potential_group) == int(group_size):
@@ -169,8 +159,7 @@ def view_group(group_id):
                     if row['group_id'] == group_id and row['group_password'] == password:
                         if any(email in m.lower() for m in row['members'].split('|')):
                             session['authorized_group'] = group_id
-                            session['authorized_email'] = email
-                            return redirect(url_for('edit_group'))
+                            return redirect(url_for('group_details', group_id=group_id))
         error = 'Invalid email or password.'
 
     return render_template('group_login.html', group_id=group_id, error=error)
@@ -188,19 +177,6 @@ def group_details(group_id):
                 if row['group_id'] == group_id:
                     group_info = row
                     group_info['members'] = row['members'].split('|')
-
-                    member_emails = [m.split('(')[-1].replace(')', '').strip().lower() for m in group_info['members']]
-                    avail_lists = []
-
-                    with open(SUBMISSIONS_FILE, 'r') as sfile:
-                        sreader = csv.reader(sfile)
-                        for srow in sreader:
-                            if len(srow) >= 7 and srow[1].strip().lower() in member_emails:
-                                availability = set(a.strip().lower() for a in srow[3].split(','))
-                                avail_lists.append(availability)
-
-                    common_availability = sorted(set.intersection(*avail_lists)) if avail_lists else []
-                    group_info['common_availability'] = common_availability
                     break
 
     return render_template('group_details.html', group=group_info)
@@ -336,9 +312,7 @@ def edit_group():
     status = request.args.get('status', '')
 
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-    elif session.get('authorized_email'):
-        email = session['authorized_email']
+        email = request.form['email'].strip().lower()
 
         if os.path.exists(GROUPS_FILE):
             with open(GROUPS_FILE, 'r') as gfile:
@@ -402,12 +376,6 @@ def delete_group():
             writer.writerows(updated_rows)
 
     return redirect(url_for('edit_group', status='deleted'))
-
-@app.route('/logout')
-def logout():
-    session.pop('authorized_group', None)
-    session.pop('authorized_email', None)
-    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

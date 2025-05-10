@@ -115,46 +115,6 @@
       color: red;
     }
   </style>
-
-<style>
-  .dropdown-container {
-    position: relative;
-    width: 100%;
-    max-width: 500px;
-  }
-
-  .dropdown-label {
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 12px;
-    cursor: pointer;
-    font-size: 14px;
-    user-select: none;
-  }
-
-  .dropdown-menu {
-    display: none;
-    position: absolute;
-    width: 100%;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    margin-top: 4px;
-    padding: 10px;
-    z-index: 10;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    max-height: 250px;
-    overflow-y: auto;
-  }
-
-  .dropdown-menu label {
-    display: block;
-    margin: 6px 0;
-    font-size: 14px;
-  }
-</style>
-
 </head>
 <body>
 
@@ -190,9 +150,7 @@
       <label for="course">Course:</label>
       <input type="text" name="course" id="course" value="{{ user.course }}" required>
 
-      <button type="button" onclick="toggleSection('availability-section')">+ Select Availability</button>
-<div id="availability-section" style="display: none; margin-top: 10px;">
-<label>Availability:</label>
+      <label for="availability">Availability:</label>
       <select name="availability" id="availability" multiple required>
         {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
         <optgroup label="{{ day }}">
@@ -210,32 +168,9 @@
           <option value="{{ day.lower() }} 7-8pm">7:00–8:00 PM</option>
         </optgroup>
         {% endfor %}
-      
-</div>
+      </select>
 
-      
-<button type="button" onclick="toggleSection('style-section')">+ Select Study Style(s)</button>
-<div id="style-section" style="display: none; margin-top: 10px;">
-<div class="dropdown-container">
-  <div class="dropdown-label" onclick="toggleDropdown()">Select Study Styles ⬇</div>
-  <div class="dropdown-menu" id="styleDropdown">
-    {% for style in [
-      'quiet group (no talking)',
-      'active discussion group',
-      'flashcard-based study',
-      'whiteboard collaboration',
-      'shared note-taking',
-      'online-only (Zoom or Discord)'
-    ] %}
-      <label>
-        <input type="checkbox" name="preferences" value="{{ style }}">
-        {{ style }}
-      </label><br>
-    {% endfor %}
-  </div>
-</div>
-</div>
-
+      <label for="preferences">Study Style:</label>
       <select name="preferences" id="preferences">
         <option value="">-- Select --</option>
         <option value="quiet group (no talking)">Quiet group (no talking)</option>
@@ -244,28 +179,16 @@
         <option value="whiteboard collaboration">Whiteboard collaboration</option>
         <option value="shared note-taking">Shared note-taking</option>
         <option value="online-only (Zoom or Discord)">Online-only (Zoom/Discord)</option>
-      
-</div>
+      </select>
 
-      
-<button type="button" onclick="toggleSection('size-section')">+ Select Preferred Group Size(s)</button>
-<div id="size-section" style="display: none; margin-top: 10px;">
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-    <label><input type="checkbox" name="group_size" value="2"> 2 people</label>
-    <label><input type="checkbox" name="group_size" value="3"> 3 people</label>
-    <label><input type="checkbox" name="group_size" value="4"> 4 people</label>
-    <label><input type="checkbox" name="group_size" value="5"> 5+ people</label>
-  </div>
-</div>
-
-      
+      <label for="group_size">Group Size:</label>
+      <select name="group_size" id="group_size">
         <option value="">-- No preference --</option>
         <option value="2">2 people</option>
         <option value="3">3 people</option>
         <option value="4">4 people</option>
         <option value="5">5+ people</option>
-      
-</div>
+      </select>
 
       <button type="submit" class="update-btn">Update</button>
     </form>
@@ -280,27 +203,6 @@
     <div class="message">{{ message }}</div>
     {% endif %}
   </div>
-
-
-<script>
-  function toggleSection(id) {
-    const section = document.getElementById(id);
-    section.style.display = section.style.display === "none" ? "block" : "none";
-  }
-
-  window.addEventListener('click', function(e) {
-    const container = document.querySelector('.dropdown-container');
-    if (container && !container.contains(e.target)) {
-      const menu = document.getElementById("styleDropdown");
-      if (menu) menu.style.display = "none";
-    }
-  });
-
-  function toggleDropdown() {
-    const dropdown = document.getElementById("styleDropdown");
-    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-  }
-</script>
 
 </body>
 </html>

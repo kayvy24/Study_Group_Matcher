@@ -195,9 +195,32 @@ def group_details(group_id):
                 if row['group_id'] == group_id:
                     group_info = row
                     group_info['members'] = row['members'].split('|')
+
+                    # Extract member emails
+                    member_emails = [
+                        m.split('(')[-1].replace(')', '').strip().lower()
+                        for m in group_info['members']
+                    ]
+
+                    avail_lists = []
+                    style_lists = []
+
+                    if os.path.exists(SUBMISSIONS_FILE):
+                        with open(SUBMISSIONS_FILE, 'r') as sfile:
+                            sreader = csv.reader(sfile)
+                            for srow in sreader:
+                                if len(srow) >= 5 and srow[1].strip().lower() in member_emails:
+                                    availability = set(a.strip().lower() for a in srow[3].split(','))
+                                    styles = set(p.strip().lower() for p in srow[4].split(','))
+                                    avail_lists.append(availability)
+                                    style_lists.append(styles)
+
+                    group_info['common_availability'] = sorted(set.intersection(*avail_lists)) if avail_lists else []
+                    group_info['common_styles'] = sorted(set.intersection(*style_lists)) if style_lists else []
                     break
 
     return render_template('group_details.html', group=group_info)
+
 
 # /manage, /update, /delete, /edit_group, /update_group, /delete_group routes now merged in below
 

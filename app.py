@@ -80,13 +80,6 @@ def index():
                     style_overlap = existing_styles & new_styles
                     group_size_match = existing_group_size.strip() in group_sizes or not group_sizes
 
-                    print(f"--- Matching against: {existing_name}")
-                    print(f"Course match: {existing_course == course}")
-                    print(f"Availability overlap: {existing_times & new_times}")
-                    print(f"Study style overlap: {style_overlap}")
-                    print(f"Group size match: {existing_group_size.strip()} in {group_sizes} = {group_size_match}")
-                    print(f"Potential group size now: {len(potential_group)}")
-
                     if existing_times & new_times and style_overlap and group_size_match:
                         potential_group.append({
                             'name': existing_name,
@@ -102,8 +95,6 @@ def index():
                 
 
         if str(len(potential_group)) in group_sizes:
-            print("🎉 GROUP FORMED with:", [p['name'] for p in potential_group])
-
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
             members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
             password = secrets.token_urlsafe(6)
@@ -327,25 +318,31 @@ def edit_group():
     message = ""
     status = request.args.get('status', '')
 
+    # Require prior login
+    if not session.get('authorized_group'):
+        return redirect(url_for('group_login_prompt'))
+
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
+    elif session.get('authorized_email'):
+        email = session['authorized_email']
 
-        if os.path.exists(GROUPS_FILE):
-            with open(GROUPS_FILE, 'r') as gfile:
-                reader = csv.DictReader(gfile)
-                for row in reader:
-                    members = [m.strip() for m in row['members'].split('|')]
-                    if any(email in m.lower() for m in members):
-                        group_info = {
-                            'group_id': row['group_id'],
-                            'course': row['class'],
-                            'availability': row['availability'],
-                            'members': members,
-                            'group_size': row.get('group_size', 'N/A')
-                        }
-                        break
-                if not group_info:
-                    message = "No group found for that email."
+    if os.path.exists(GROUPS_FILE):
+        with open(GROUPS_FILE, 'r') as gfile:
+            reader = csv.DictReader(gfile)
+            for row in reader:
+                members = [m.strip() for m in row['members'].split('|')]
+                if any(email in m.lower() for m in members):
+                    group_info = {
+                        'group_id': row['group_id'],
+                        'course': row['class'],
+                        'availability': row['availability'],
+                        'members': members,
+                        'group_size': row.get('group_size', 'N/A')
+                    }
+                    break
+            if not group_info:
+                message = "No group found for that email."
 
     return render_template('edit_group.html', group=group_info, email=email, message=message, status=status)
 
@@ -392,6 +389,19 @@ def delete_group():
             writer.writerows(updated_rows)
 
     return redirect(url_for('edit_group', status='deleted'))
+
+@app.route('/group_login_prompt', methods=['GET', 'POST'])
+def group_login_prompt():
+    if request.method == 'POST':
+        group_id = request.form['group_id'].strip()
+        return redirect(url_for('view_group', group_id=group_id))
+    return '''
+        <h3>Enter your Group ID to access editing:</h3>
+        <form method="POST">
+            <input type="text" name="group_id" placeholder="Group ID" required>
+            <button type="submit">Continue</button>
+        </form>
+    '''
 
 if __name__ == '__main__':
     app.run(debug=True)

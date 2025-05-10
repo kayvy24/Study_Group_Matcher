@@ -364,7 +364,7 @@ def update_group():
             writer.writeheader()
             writer.writerows(updated_rows)
 
-    return redirect(url_for('edit_group'))
+    return redirect(url_for('edit_group', status='updated'))
 
 @app.route('/delete_group', methods=['POST'])
 def delete_group():
@@ -384,7 +384,7 @@ def delete_group():
             writer.writeheader()
             writer.writerows(updated_rows)
 
-    return redirect(url_for('edit_group'))
+    return redirect(url_for('edit_group', status='deleted'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

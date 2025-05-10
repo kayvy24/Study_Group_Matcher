@@ -173,25 +173,29 @@
         {% endfor %}
       </select>
 
-      <label for="preferences">Study Style:</label>
-      <select name="preferences" id="preferences">
-        <option value="">-- Select --</option>
-        <option value="quiet group (no talking)">Quiet group (no talking)</option>
-        <option value="active discussion group">Active discussion group</option>
-        <option value="flashcard-based study">Flashcard-based study</option>
-        <option value="whiteboard collaboration">Whiteboard collaboration</option>
-        <option value="shared note-taking">Shared note-taking</option>
-        <option value="online-only (Zoom or Discord)">Online-only (Zoom/Discord)</option>
-      </select>
+      
+<label for="preferences">Study Style(s):</label>
+<select name="preferences" id="preferences" multiple required>
+  <option value="quiet group (no talking)">Quiet group (no talking)</option>
+  <option value="active discussion group">Active discussion group</option>
+  <option value="flashcard-based study">Flashcard-based study</option>
+  <option value="whiteboard collaboration">Whiteboard collaboration</option>
+  <option value="shared note-taking">Shared note-taking</option>
+  <option value="online-only (Zoom or Discord)">Online-only (Zoom or Discord)</option>
+</select>
+<p style="font-size: 13px; color: #666;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</p>
 
-      <label for="group_size">Preferred Group Size:</label>
-      <select name="group_size" id="group_size">
-        <option value="">-- No preference --</option>
-        <option value="2">2 people</option>
-        <option value="3">3 people</option>
-        <option value="4">4 people</option>
-        <option value="5">5+ people</option>
-      </select>
+
+      
+<label for="group_size">Preferred Group Size(s):</label>
+<select name="group_size" id="group_size" multiple required>
+  <option value="2">2 people</option>
+  <option value="3">3 people</option>
+  <option value="4">4 people</option>
+  <option value="5">5+ people</option>
+</select>
+<p style="font-size: 13px; color: #666;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</p>
+
 
       <button type="submit">Find My Group</button>
     </form>

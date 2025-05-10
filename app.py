@@ -93,7 +93,7 @@ def index():
                         if group_times & new_times:
                             members = row['members'].split('|')
                             if len(members) < int(row['group_size']):
-                                members.append(name)
+                                members.append(f"{name} ({email})")
                                 updated_groups.append({
                                     'group_id': row['group_id'],
                                     'class': course,
@@ -136,7 +136,8 @@ Group members:
 
         if not existing_group_joined and len(potential_group) == int(group_size):
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
-            members_str = '|'.join([p['name'] for p in potential_group])
+            # ✅ When creating a new group
+            members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
             with open(GROUPS_FILE, 'a', newline='') as gfile:
                 fieldnames = ['group_id', 'class', 'availability', 'members', 'group_size']
                 writer = csv.DictWriter(gfile, fieldnames=fieldnames)
@@ -327,8 +328,8 @@ def edit_group():
             with open(GROUPS_FILE, 'r') as gfile:
                 reader = csv.DictReader(gfile)
                 for row in reader:
-                    members = [m.strip().lower() for m in row['members'].split('|')]
-                    if email in members:
+                    members = [m.strip() for m in row['members'].split('|')]
+                    if any(email in m.lower() for m in members):
                         group_info = {
                             'group_id': row['group_id'],
                             'course': row['class'],

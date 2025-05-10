@@ -132,7 +132,12 @@ You've been matched into a study group for {course.upper()} with:
 📍 Suggested Location: {location}
 
 🔐 Group Password: {password}
-Use it to view your group at: {url_for('view_group', group_id=group_id, _external=True)}
+📌 Group ID: {group_id}
+
+👉 View your group: {url_for('view_group', group_id=group_id, _external=True)}
+👉 Edit your group: {url_for('view_group', group_id=group_id, _external=True)} (use same password)
+
+Keep this email — you'll need the Group ID and Password to view or make changes.
 
 — SDSU Study Group Matcher
 """

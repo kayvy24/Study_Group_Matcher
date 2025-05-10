@@ -80,6 +80,13 @@ def index():
                     style_overlap = existing_styles & new_styles
                     group_size_match = existing_group_size.strip() in group_sizes or not group_sizes
 
+                    print(f"--- Matching against: {existing_name}")
+                    print(f"Course match: {existing_course == course}")
+                    print(f"Availability overlap: {existing_times & new_times}")
+                    print(f"Study style overlap: {style_overlap}")
+                    print(f"Group size match: {existing_group_size.strip()} in {group_sizes} = {group_size_match}")
+                    print(f"Potential group size now: {len(potential_group)}")
+
                     if existing_times & new_times and style_overlap and group_size_match:
                         potential_group.append({
                             'name': existing_name,
@@ -95,6 +102,8 @@ def index():
                 
 
         if str(len(potential_group)) in group_sizes:
+            print("🎉 GROUP FORMED with:", [p['name'] for p in potential_group])
+
             group_id = str(sum(1 for _ in open(GROUPS_FILE)) if os.path.exists(GROUPS_FILE) else 1)
             members_str = '|'.join([f"{p['name']} ({p['email']})" for p in potential_group])
             password = secrets.token_urlsafe(6)

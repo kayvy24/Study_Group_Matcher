@@ -119,12 +119,13 @@ def group_details(group_id):
                     member_emails = [m.split('(')[-1].replace(')', '').strip().lower() for m in group_info['members']]
                     avail_lists = []
 
-                    with open(SUBMISSIONS_FILE, 'r') as sfile:
-                        sreader = csv.reader(sfile)
-                        for srow in sreader:
-                            if len(srow) >= 4 and srow[1].strip().lower() in member_emails:
-                                availability = set(a.strip().lower() for a in srow[3].split(','))
-                                avail_lists.append(availability)
+                    if os.path.exists(SUBMISSIONS_FILE):
+                        with open(SUBMISSIONS_FILE, 'r') as sfile:
+                            sreader = csv.reader(sfile)
+                            for srow in sreader:
+                                if len(srow) >= 4 and srow[1].strip().lower() in member_emails:
+                                    availability = set(a.strip().lower() for a in srow[3].split(','))
+                                    avail_lists.append(availability)
 
                     common_availability = sorted(set.intersection(*avail_lists)) if avail_lists else []
                     group_info['common_availability'] = common_availability

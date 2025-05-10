@@ -159,6 +159,7 @@ def view_group(group_id):
                     if row['group_id'] == group_id and row['group_password'] == password:
                         if any(email in m.lower() for m in row['members'].split('|')):
                             session['authorized_group'] = group_id
+                            session['authorized_email'] = email
                             return redirect(url_for('group_details', group_id=group_id))
         error = 'Invalid email or password.'
 
@@ -312,7 +313,9 @@ def edit_group():
     status = request.args.get('status', '')
 
     if request.method == 'POST':
-        email = request.form['email'].strip().lower()
+        email = request.form.get('email', '').strip().lower()
+    elif session.get('authorized_email'):
+        email = session['authorized_email']
 
         if os.path.exists(GROUPS_FILE):
             with open(GROUPS_FILE, 'r') as gfile:
@@ -376,6 +379,12 @@ def delete_group():
             writer.writerows(updated_rows)
 
     return redirect(url_for('edit_group', status='deleted'))
+
+@app.route('/logout')
+def logout():
+    session.pop('authorized_group', None)
+    session.pop('authorized_email', None)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

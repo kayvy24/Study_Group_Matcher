@@ -35,7 +35,7 @@ def index():
         email = request.form['email'].strip().lower()
         course = request.form['course'].lower().strip()
         availability_list = request.form.getlist('availability')
-    availability = ', '.join([a.lower().strip() for a in availability_list])
+        availability = ', '.join([a.lower().strip() for a in availability_list])
         preferences = ', '.join(request.form.getlist('preferences'))
         group_sizes = request.form.getlist('group_size')
         group_size_str = ', '.join(group_sizes)
@@ -51,14 +51,14 @@ def index():
             'group_size': group_size_str
         }
 
-    with open(SUBMISSIONS_FILE, mode='a', newline='') as file:
+        with open(SUBMISSIONS_FILE, mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([name, email, course, availability, preferences, group_size_str, 'yes'])
 
         # Find previous submissions and try to form a group
         potential_group = [user_added]
 
-    with open(SUBMISSIONS_FILE, 'r') as file:
+        with open(SUBMISSIONS_FILE, 'r') as file:
             reader = csv.reader(file)
             for row in reader:
                 if len(row) < 7:
@@ -145,7 +145,7 @@ Keep this email — you'll need the Group ID and Password to view or make change
                 print("❌ Match email error:", str(e))
 
 grouped_names = set()
-    if os.path.exists(GROUPS_FILE):
+        if os.path.exists(GROUPS_FILE):
             with open(GROUPS_FILE, 'r') as gfile:
                 reader = csv.DictReader(gfile)
                 for row in reader:
@@ -153,7 +153,7 @@ grouped_names = set()
                     grouped_names.update(m.strip().split(' (')[0].lower() for m in members)
 
         potential_group = [user_added]
-    with open(SUBMISSIONS_FILE, 'r') as file:
+        with open(SUBMISSIONS_FILE, 'r') as file:
             reader = csv.reader(file)
             for row in reader:
                 if len(row) < 7:
@@ -235,7 +235,7 @@ Keep this email — you'll need the Group ID and Password to view or make change
                 print("❌ Match email error:", str(e))
 
     if os.path.exists(GROUPS_FILE):
-    with open(GROUPS_FILE, 'r') as gfile:
+        with open(GROUPS_FILE, 'r') as gfile:
             reader = csv.DictReader(gfile)
             for row in reader:
                 group_list.append({
@@ -253,7 +253,7 @@ def view_group(group_id):
         email = request.form['email'].strip().lower()
         password = request.form['password'].strip()
 
-    if os.path.exists(GROUPS_FILE):
+        if os.path.exists(GROUPS_FILE):
             with open(GROUPS_FILE, 'r') as file:
                 reader = csv.DictReader(file)
                 for row in reader:
@@ -272,7 +272,7 @@ def group_details(group_id):
 
     group_info = None
     if os.path.exists(GROUPS_FILE):
-    with open(GROUPS_FILE, 'r') as file:
+        with open(GROUPS_FILE, 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
                 if row['group_id'] == group_id:
@@ -295,7 +295,7 @@ def manage():
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
 
-    if os.path.exists(SUBMISSIONS_FILE):
+        if os.path.exists(SUBMISSIONS_FILE):
             with open(SUBMISSIONS_FILE, 'r') as file:
                 reader = csv.reader(file)
                 for row in reader:
@@ -321,7 +321,7 @@ def update():
     updated_row = None
 
     if os.path.exists(SUBMISSIONS_FILE):
-    with open(SUBMISSIONS_FILE, 'r') as file:
+        with open(SUBMISSIONS_FILE, 'r') as file:
             reader = csv.reader(file)
             for row in reader:
                 if len(row) >= 7 and row[1].strip().lower() == email:
@@ -337,7 +337,7 @@ def update():
                     row = updated_row
                 new_rows.append(row)
 
-    with open(SUBMISSIONS_FILE, 'w', newline='') as file:
+        with open(SUBMISSIONS_FILE, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerows(new_rows)
 
